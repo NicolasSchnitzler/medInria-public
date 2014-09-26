@@ -262,6 +262,7 @@ vtkImageView::~vtkImageView()
 }
 
 //----------------------------------------------------------------------------
+/** Override vtkObject - return the maximum mtime of this and any objects owned by this. */
 unsigned long vtkImageView::GetMTime()
 {
     typedef unsigned long MTimeType;
@@ -287,6 +288,7 @@ unsigned long vtkImageView::GetMTime()
 }
 
 //----------------------------------------------------------------------------
+/** Attach an interactor for the internal render window. */
 void vtkImageView::SetupInteractor(vtkRenderWindowInteractor *arg)
 {
   this->UnInstallPipeline();
@@ -297,6 +299,7 @@ void vtkImageView::SetupInteractor(vtkRenderWindowInteractor *arg)
 }
 
 //----------------------------------------------------------------------------
+/** Set your own renderwindow and renderer */
 void vtkImageView::SetRenderWindow(vtkRenderWindow *arg)
 {
   this->UnInstallPipeline();
@@ -321,6 +324,7 @@ void vtkImageView::SetRenderer(vtkRenderer *arg)
 }
 
 //----------------------------------------------------------------------------
+/** Render the resulting image. */
 void vtkImageView::Render()
 {
   if (this->RenderWindow)
@@ -384,6 +388,9 @@ bool vtkImageView::Compare(vtkMatrix4x4 *mat1, vtkMatrix4x4 *mat2)
 }
 
 //----------------------------------------------------------------------------
+/**
+* Reslice an image onto the input image. Internal use only.
+*/
 vtkImageData *vtkImageView::ResliceImageToInput(vtkImageData *image, vtkMatrix4x4 *matrix)
 {
   if (!image || !this->GetInput())
@@ -435,6 +442,7 @@ vtkImageData *vtkImageView::ResliceImageToInput(vtkImageData *image, vtkMatrix4x
 }
 
 //----------------------------------------------------------------------------
+/**  Set the input image to the viewer. */
 void vtkImageView::SetInput(vtkImageData *arg, vtkMatrix4x4 *matrix, int layer)
 {
   vtkSetObjectBodyMacro (Input, vtkImageData, arg);
@@ -468,6 +476,12 @@ void vtkImageView::SetInputConnection(vtkAlgorithmOutput* arg, vtkMatrix4x4 *mat
 }
 
 //----------------------------------------------------------------------------
+/**
+* This function is called right after setting both Renderer and RenderWindow.
+* It allows a class to add actors for instance without knowing when the Renderer
+* and RenderWindow are set. For example, vtkImageView will add the corner annotations
+* during the call to the Initialize function.
+*/
 void vtkImageView::InstallPipeline()
 {
   if (this->RenderWindow && this->GetRenderer() && !this->RenderWindow->HasRenderer (this->GetRenderer()))
@@ -509,6 +523,10 @@ void vtkImageView::UnInstallPipeline()
 
 
 //----------------------------------------------------------------------------
+/**
+* From any point in space \arg pos1, this method will return in \arg pos2
+* the closest position that lies within the image boundaries.
+*/
 void vtkImageView::GetWithinBoundsPosition (double* pos1, double* pos2)
 {
     for (unsigned int i=0; i<3; i++) pos2[i] = pos1[i];
@@ -569,6 +587,9 @@ void vtkImageView::UpdateCursorPosition (double pos[3])
 }
 
 //----------------------------------------------------------------------------
+/**
+ Reset the 3D position to center of the image
+*/
 void vtkImageView::ResetCurrentPoint()
 {
   if (!this->GetInput())
@@ -618,6 +639,10 @@ vtkPiecewiseFunction * vtkImageView::GetDefaultOpacityTransferFunction()
 }
 
 //----------------------------------------------------------------------------
+/**
+* Transfer functions define the mapping of the intensity or color
+* values in the image to colors and opacity displayed on the screen.
+*/
 void vtkImageView::SetTransferFunctions (vtkColorTransferFunction *color,
                                          vtkPiecewiseFunction     *opacity)
 {
@@ -866,6 +891,37 @@ void vtkImageView::SetTransferFunctionRangeFromWindowSettings(int layer)
                   targetRange[1]);
       touched = true;
   }
+
+  if ( touched )
+  {
+    //todo: Call Modified on the right object
+//    this->GetWindowLevel(layer)->Modified();
+
+    //probably should change the lookuptable of this scalar bar?
+    //no, done in setLookupTable.
+
+    this->SetScalarBarLabelFormat(targetRange);
+    this->ScalarBar->Modified();
+  }
+}
+
+/**
+*  Set the precision of the scalarBar values
+*/
+void vtkImageView::SetScalarBarLabelFormat(double* intensityRange)
+{
+    double diff = fabs(fabs(intensityRange[1])-fabs(intensityRange[0]));
+
+    if (diff>1 || diff == 0)
+    {
+        this->ScalarBar->SetLabelFormat ("%.f");
+        return;
+    }
+
+    int precision = -floor(log10(diff))+1; //+1 for the third value displayed (mean) not to be rounded
+    char format[10];
+    snprintf(format, 10, "%%.%df", precision);
+    this->ScalarBar->SetLabelFormat (format);
 }
 
 //----------------------------------------------------------------------------
@@ -937,6 +993,9 @@ void vtkImageView::SetWindowSettingsFromTransferFunction(int layer)
   }
 }
 
+/**
+* Gets the color level of the current layer.
+*/
 double vtkImageView::GetColorLevel() const
 {
     int currentLayer = this->GetCurrentLayer();
@@ -944,21 +1003,27 @@ double vtkImageView::GetColorLevel() const
 }
 
 
-
+/**
+* Sets the color level of the current layer.
+*/
 void vtkImageView::SetColorLevel(double s)
 {
     int currentLayer = this->GetCurrentLayer();
     this->SetColorLevel(s,currentLayer);
 }
 
-
+/**
+* Gets the color window of the current layer.
+*/
 double vtkImageView::GetColorWindow() const
 {
     int currentLayer = this->GetCurrentLayer();
     return this->GetColorWindow(currentLayer);
 }
 
-
+/**
+* Sets the color window of the current layer.
+*/
 void vtkImageView::SetColorWindow(double s)
 {
     int currentLayer = this->GetCurrentLayer();
@@ -994,12 +1059,18 @@ void vtkImageView::SetColorLevel(double s,int layer)
   this->Modified();
 }
 
+/**
+* Sets the color range of the current layer.
+*/
 void vtkImageView::SetColorRange( double r[2] )
 {
     int currentLayer = this->GetCurrentLayer();
     this->SetColorRange(r, currentLayer);
 }
 
+/**
+* Gets the color range of the current layer.
+*/
 void vtkImageView::GetColorRange( double r[2] )
 {
   int currentLayer = this->GetCurrentLayer();
@@ -1030,6 +1101,9 @@ void vtkImageView::SetTextProperty (vtkTextProperty* textproperty)
 }
 
 //----------------------------------------------------------------------------
+/**
+* Convert an indices coordinate point (image coordinates) into a world coordinate point
+*/
 void vtkImageView::GetWorldCoordinatesFromImageCoordinates(int indices[3], double* position)
 {
   if (!this->GetInput())
@@ -1053,6 +1127,9 @@ void vtkImageView::GetWorldCoordinatesFromImageCoordinates(int indices[3], doubl
 }
 
 //----------------------------------------------------------------------------
+/**
+* Convert a world coordinate point into an image indices coordinate point
+*/
 void vtkImageView::GetImageCoordinatesFromWorldCoordinates(double position[3], int* indices) const
 {
   if (!this->GetInput())
@@ -1078,6 +1155,10 @@ void vtkImageView::GetImageCoordinatesFromWorldCoordinates(double position[3], i
   }
 }
 
+/**
+* Get the pixel value at a given world coordinate point in space, return
+* zero if out of bounds.
+*/
 double vtkImageView::GetValueAtPosition(double worldcoordinates[3], int component )
 {
   int layer = this->GetCurrentLayer();
@@ -1162,6 +1243,7 @@ void vtkImageView::SetPosition(int a,int b)
 }
 
 //----------------------------------------------------------------------------
+/**  Set/Get the position in screen coordinates of the rendering window. */
 int* vtkImageView::GetPosition() const
 {
   if (this->RenderWindow)
@@ -1177,6 +1259,7 @@ void vtkImageView::SetSize(int a,int b)
 }
 
 //----------------------------------------------------------------------------
+/** Set/Get the size of the window in screen coordinates in pixels. */
 int* vtkImageView::GetSize() const
 {
   if (!this->RenderWindow)
@@ -1185,12 +1268,18 @@ int* vtkImageView::GetSize() const
 }
 
 //----------------------------------------------------------------------------
+/**
+* Enable interaction on the view.
+*/
 void vtkImageView::Enable()
 {
   if (this->Interactor)
     this->Interactor->Enable();
 }
 //----------------------------------------------------------------------------
+/**
+* Disable interaction on the view.
+*/
 void vtkImageView::Disable()
 {
   if (this->Interactor)
@@ -1205,6 +1294,9 @@ int vtkImageView::GetEnabled() const
 }
 
 //----------------------------------------------------------------------------
+/**
+* Start the interactor.
+*/
 void vtkImageView::Start()
 {
   if (this->Interactor)
@@ -1226,6 +1318,9 @@ double* vtkImageView::GetBackground() const
 }
 
 //----------------------------------------------------------------------------
+/**
+* Get/Set the zoom factor of the view
+*/
 void vtkImageView::SetZoom (double arg)
 {
   if (!this->GetInput())
@@ -1282,6 +1377,9 @@ double vtkImageView::GetZoom()
 }
 
 //----------------------------------------------------------------------------
+/**
+* Reset the camera in a nice way for the 2D view
+*/
 void vtkImageView::ResetCamera()
 {
   if (this->GetRenderer())
@@ -1305,6 +1403,9 @@ void vtkImageView::ResetCamera()
 }
 
 //----------------------------------------------------------------------------
+/**
+* Get/Set the camera settings, position
+*/
 void vtkImageView::SetCameraPosition (double* arg)
 {
   vtkCamera *cam = this->GetRenderer() ? this->GetRenderer()->GetActiveCamera() : NULL;
@@ -1325,6 +1426,9 @@ double* vtkImageView::GetCameraPosition() const
 }
 
 //----------------------------------------------------------------------------
+/**
+* Get/Set the camera settings, focal point
+*/
 void vtkImageView::SetCameraFocalPoint (double* arg)
 {
   vtkCamera *cam = this->GetRenderer() ? this->GetRenderer()->GetActiveCamera() : NULL;
@@ -1345,6 +1449,9 @@ double* vtkImageView::GetCameraFocalPoint() const
 }
 
 //----------------------------------------------------------------------------
+/**
+* Get/Set the camera settings, ViewUp
+*/
 void vtkImageView::SetCameraViewUp (double* arg)
 {
   vtkCamera *cam = this->GetRenderer() ? this->GetRenderer()->GetActiveCamera() : NULL;
@@ -1366,6 +1473,9 @@ double* vtkImageView::GetCameraViewUp() const
 
 
 //----------------------------------------------------------------------------
+/**
+* Get/Set the camera settings, parallel scale
+*/
 void vtkImageView::SetCameraParallelScale (double arg)
 {
   vtkCamera *cam = this->GetRenderer() ? this->GetRenderer()->GetActiveCamera() : NULL;
@@ -1386,6 +1496,9 @@ double vtkImageView::GetCameraParallelScale() const
 }
 
 //----------------------------------------------------------------------------
+/**
+* Reset position - zoom - window/level to default
+*/
 void vtkImageView::Reset()
 {
   this->ResetCurrentPoint();
@@ -1403,6 +1516,9 @@ void vtkImageView::SetShowAnnotations (int val)
 }
 
 //----------------------------------------------------------------------------
+/**
+* Show/Hide the scalarbar.
+*/
 void vtkImageView::SetShowScalarBar (int val)
 {
   this->ShowScalarBar = val;
@@ -1410,6 +1526,9 @@ void vtkImageView::SetShowScalarBar (int val)
 }
 
 //----------------------------------------------------------------------------
+/**
+* Reset the window level
+*/
 void vtkImageView::ResetWindowLevel()
 {
   if (!this->GetInput())
@@ -1471,11 +1590,17 @@ const char *vtkImageView::GetSeriesName() const
 }
 
 //----------------------------------------------------------------------------
+/**
+* Add a new layer. Returns the id of the layer created. Should be reimplemented in subclasses.
+*/
 void vtkImageView::AddLayer(int layer)
 {
 }
 
 //----------------------------------------------------------------------------
+/**
+* Remove a layer. Should be reimplemented in subclasses.
+*/
 void vtkImageView::RemoveLayer(int layer)
 {
     if( layer < (int)(this->ITKInputVector.size()) )
@@ -1485,17 +1610,26 @@ void vtkImageView::RemoveLayer(int layer)
 }
 
 //----------------------------------------------------------------------------
+/**
+* Remove all layers. Should be reimplemented in subclasses.
+*/
 void vtkImageView::RemoveAllLayers()
 {
 }
 
 //----------------------------------------------------------------------------
+/**
+* Check whether layer exists. Should be reimplemented in subclasses.
+*/
 bool vtkImageView::HasLayer(int layer) const
 {
   return ( layer >= 0 ) && ( layer < this->GetNumberOfLayers());
 }
 
 //----------------------------------------------------------------------------
+/**
+* Returns the number of layers. Should be reimplemented in subclasses.
+*/
 int vtkImageView::GetNumberOfLayers() const
 {
   return 0;
@@ -1854,7 +1988,9 @@ itk::ImageBase<4>* vtkImageView::GetTemporalITKInput() const
   return this->ITKInput4;
 }
 
-
+/**
+*  Get the bounding box of the input image
+*/
 void vtkImageView::GetInputBounds ( double * bounds )
 {
   this->GetInputAlgorithm()->UpdateInformation();
@@ -1869,6 +2005,9 @@ void vtkImageView::GetInputBounds ( double * bounds )
   }
 }
 
+/**
+*  Get the bounding box of the input image in world coordinates.
+*/
 void vtkImageView::GetInputBoundsInWorldCoordinates ( double * bounds )
 {
   double imageBounds [6];
@@ -1993,6 +2132,11 @@ void vtkImageView::SetOverlayRenderer( vtkRenderer *arg )
     }
 }
 
+/**
+* Sets the current active layer.
+*
+* @param layer If HasLayer(layer) returns false, does nothing.
+*/
 void vtkImageView::SetCurrentLayer(int layer)
 {
   if (this->HasLayer(layer) && this->CurrentLayer != layer)
@@ -2011,11 +2155,20 @@ void vtkImageView::SetCurrentLayer(int layer)
   }
 }
 
+/**
+* Gets the current active layer.
+*/
 int vtkImageView::GetCurrentLayer() const
 {
   return this->CurrentLayer;
 }
 
+/**
+* The lookup table is an alternative way to define a transfer
+* function.  Internally this is transformed into a
+* vtkColorTransferFunction (color) and a vtkPiecewiseFunction
+* (opacity/alpha).  Default is a linear black to white table.
+*/
 vtkLookupTable * vtkImageView::GetLookupTable() const
 {
     int layer = this->GetCurrentLayer();
@@ -2028,6 +2181,10 @@ vtkColorTransferFunction * vtkImageView::GetColorTransferFunction() const
   return this->GetColorTransferFunction(layer);
 }
 
+/**
+* Composite volume rendering takes into account the opacity (alpha)
+* value to add transparency.
+*/
 vtkPiecewiseFunction * vtkImageView::GetOpacityTransferFunction() const
 {
   int layer = this->GetCurrentLayer();
