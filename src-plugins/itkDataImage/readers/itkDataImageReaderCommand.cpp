@@ -21,9 +21,9 @@
 
 namespace itk
 {
-    void DataImageReaderCommand::Execute (Object *caller, const EventObject &event)
+    void DataImageReaderCommand::Execute (itk::Object *caller, const itk::EventObject &event)
     {
-        ImageIOBase *po = dynamic_cast<ImageIOBase *>(caller);
+        itk::ImageIOBase *po = dynamic_cast<itk::ImageIOBase *>(caller);
 
         if (!po)
             return;
@@ -35,9 +35,9 @@ namespace itk
         }
     }
         
-    void DataImageReaderCommand::Execute (const Object *caller, const EventObject &event)
+    void DataImageReaderCommand::Execute (const itk::Object *caller, const itk::EventObject &event)
     {
-        ImageIOBase *po = dynamic_cast<ImageIOBase *>(const_cast<Object *>(caller) );
+        itk::ImageIOBase *po = dynamic_cast<itk::ImageIOBase *>(const_cast<itk::Object *>(caller) );
         if (! po)
             return;
         

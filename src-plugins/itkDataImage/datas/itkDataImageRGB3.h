@@ -17,8 +17,6 @@
 #include <itkDataImage.h>
 #include <itkDataImagePluginExport.h>
 
-extern const char itkDataImageRGB3Name[] = "itkDataImageRGB3";
+extern const char itkDataImageRGB3Name[];
 typedef itk::RGBPixel<unsigned char>     RGBPixelType;
 typedef ITKDATAIMAGEPLUGIN_EXPORT itkDataImage<3,RGBPixelType,itkDataImageRGB3Name> itkDataImageRGB3;
-
-

@@ -48,6 +48,20 @@ find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
 
+# This is a CMake example for Python
+
+FIND_PACKAGE(SWIG REQUIRED)
+INCLUDE(${SWIG_USE_FILE})
+
+FIND_PACKAGE(PythonLibs)
+INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+SET(CMAKE_SWIG_FLAGS "")
+
+SET_SOURCE_FILES_PROPERTIES(itkDataImage.i PROPERTIES CPLUSPLUS ON)
+
 ## #############################################################################
 ## List Sources
 ## #############################################################################
@@ -61,8 +75,6 @@ list_source_files(${PROJECT_NAME}
   writers
   )
 
-
-
 ## #############################################################################
 ## include directorie.
 ## #############################################################################
@@ -74,7 +86,15 @@ list_header_directories_to_include(${PROJECT_NAME}
 include_directories(${${PROJECT_NAME}_INCLUDE_DIRS}
   ${MEDINRIA_INCLUDE_DIRS}
   )
+  
 
+  
+foreach(DIR_TO_INCLUDE ${${PROJECT_NAME}_INCLUDE_DIRS})
+	SET_SOURCE_FILES_PROPERTIES(itkDataImage.i PROPERTIES SWIG_FLAGS "-I${DIR_TO_INCLUDE}")
+endforeach(DIR_TO_INCLUDE)
+
+SWIG_ADD_MODULE(itkDataImage python itkDataImage.i ${${PROJECT_NAME}_SOURCES})
+SWIG_LINK_LIBRARIES(itkDataImage ${PYTHON_LIBRARIES})
 ## #############################################################################
 ## Precompile headers
 ## #############################################################################
@@ -155,6 +175,36 @@ target_link_libraries(${PROJECT_NAME}
   vtkRendering
   vtkVolumeRendering
   )
+  
+SWIG_LINK_LIBRARIES(itkDataImage ${PYTHON_LIBRARIES})
+SWIG_LINK_LIBRARIES(itkDataImage	 ${QT_LIBRARIES})
+SWIG_LINK_LIBRARIES(itkDataImage	  dtkCore	)
+SWIG_LINK_LIBRARIES(itkDataImage	  dtkLog	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOBioRad	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOBMP	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOGDCM	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOGIPL	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOHDF5	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOJPEG	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOLSM	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOMeta	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIONIFTI	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIONRRD	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOPhilipsREC	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOPNG	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOStimulate	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKIOVTK	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ITKStatistics	)
+SWIG_LINK_LIBRARIES(itkDataImage	  ${ITKReview_LIBRARIES} )
+SWIG_LINK_LIBRARIES(itkDataImage	  medCore	)
+SWIG_LINK_LIBRARIES(itkDataImage	  medImageIO	)
+SWIG_LINK_LIBRARIES(itkDataImage	  medLog	)
+SWIG_LINK_LIBRARIES(itkDataImage	  medVtkInria	)
+SWIG_LINK_LIBRARIES(itkDataImage	  QVTK	)
+SWIG_LINK_LIBRARIES(itkDataImage	  vtkCommon	)
+SWIG_LINK_LIBRARIES(itkDataImage	  vtkRendering	)
+SWIG_LINK_LIBRARIES(itkDataImage	  vtkVolumeRendering	)
+
 
 # needed because of link  with medImageIO
 if(APPLE)
@@ -173,6 +223,6 @@ set_plugin_install_rules(${PROJECT_NAME})
 ## #############################################################################
 
 if(MEDINRIA_BUILD_TESTS)
-  add_subdirectory(tests)
+  #add_subdirectory(tests)
 endif()
 

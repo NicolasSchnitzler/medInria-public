@@ -62,14 +62,61 @@ option(${PROJECT_NAME}_BUILD_TESTS
   "Build tests"
   OFF
   )
-if(${PROJECT_NAME}_BUILD_TESTS)
-    enable_testing()
-endif()
+#if(${PROJECT_NAME}_BUILD_TESTS)
+#	enable_testing()
+#endif()
 
 option(${PROJECT_NAME}_BUILD_DOCUMENTATION
   "Build documentation"
   OFF
   )
+  
+  ## #################################################################
+## Swig
+## #################################################################
+
+mark_as_advanced(SWIG_DIR)
+mark_as_advanced(SWIG_EXECUTABLE)
+mark_as_advanced(SWIG_VERSION)
+
+find_package(SWIG REQUIRED)
+
+if(SWIG_FOUND)
+  include(${SWIG_USE_FILE})
+  set(CMAKE_SWIG_FLAGS "")
+  
+  macro(med_wrap project target name language input deps)
+    
+    set(wrap_output ${project}_wrap_${language}.cpp)
+    
+    add_custom_command(
+      OUTPUT ${wrap_output}
+      COMMAND ${SWIG_EXECUTABLE}
+      ARGS
+      "-${language}"
+      "-c++"
+      "-module" ${name}
+      "-I${PROJECT_SOURCE_DIR}/.."
+      "-I${PROJECT_SOURCE_DIR}"
+      "-outdir" ${CMAKE_CURRENT_BINARY_DIR}
+      "-o" ${wrap_output}
+      ${input}
+      MAIN_DEPENDENCY ${input}
+      COMMENT "Wrapping ${input} to ${language}")
+    
+    set(${target} ${${target}} ${wrap_output})
+    
+  endmacro(med_wrap)
+
+else(SWIG_FOUND)
+  
+  message("DTK_BUILD_WRAPPERS options requires SWIG.")
+
+endif(SWIG_FOUND)
+
+if(SWIG_FOUND)
+  add_definitions(-DHAVE_SWIG)
+endif(SWIG_FOUND)
 
 
 ## #############################################################################
@@ -169,6 +216,9 @@ add_subdirectory(src)
 add_subdirectory(app)
 add_subdirectory(src-plugins)
 
+if(${PROJECT_NAME}_BUILD_TESTS)
+  add_subdirectory(tests)
+endif()
 if(${PROJECT_NAME}_BUILD_DOCUMENTATION)
   add_subdirectory(doc)
 endif()

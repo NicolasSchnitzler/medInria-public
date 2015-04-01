@@ -16,7 +16,5 @@
 #include <itkDataImage.h>
 #include <itkDataImagePluginExport.h>
 
-extern const char itkDataImageFloat3Name[] = "itkDataImageFloat3";
+extern const char itkDataImageFloat3Name[];
 typedef ITKDATAIMAGEPLUGIN_EXPORT itkDataImage<3,float,itkDataImageFloat3Name> itkDataImageFloat3;
-
-

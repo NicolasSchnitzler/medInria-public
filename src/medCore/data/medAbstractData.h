@@ -16,6 +16,7 @@
 #include <dtkCore/dtkAbstractData.h>
 
 #include <medCoreExport.h>
+#include <medDataIndex.h>
 
 class medAbstractDataPrivate;
 

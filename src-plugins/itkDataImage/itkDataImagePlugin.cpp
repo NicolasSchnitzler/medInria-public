@@ -10,7 +10,8 @@
   PURPOSE.
 
 =========================================================================*/
-
+//#include <datas/renameClasses.h>
+#include <datas/itkDataImage.h>
 #include <itkDataImagePlugin.h>
 #include <itkDataImageChar3.h>
 #include <itkDataImageChar4.h>

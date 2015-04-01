@@ -16,7 +16,5 @@
 #include <itkDataImage.h>
 #include <itkDataImagePluginExport.h>
 
-extern const char itkDataImageULong3Name[] = "itkDataImageULong3";
+extern const char itkDataImageULong3Name[];
 typedef ITKDATAIMAGEPLUGIN_EXPORT itkDataImage<3,unsigned long,itkDataImageULong3Name> itkDataImageULong3;
-
-

@@ -17,8 +17,7 @@
 #include "itkDataImage.h"
 #include "itkDataImagePluginExport.h"
 
-extern const char itkDataImageVectorDouble3Name[] = "itkDataImageVectorDouble3";
-typedef itk::Vector<double,3>        DoubleVectorType;
+extern const char itkDataImageVectorDouble3Name[];
+
+typedef itk::Vector<double,3>     DoubleVectorType;
 typedef ITKDATAIMAGEPLUGIN_EXPORT itkDataImage<3,itk::Vector<double,3>,itkDataImageVectorDouble3Name> itkDataImageVectorDouble3;
-
-

@@ -43,6 +43,17 @@ list_source_files(${PROJECT_NAME}
 
 set(${PROJECT_NAME}_QRC resources/medCore.qrc)
 
+FIND_PACKAGE(SWIG REQUIRED)
+INCLUDE(${SWIG_USE_FILE})
+
+FIND_PACKAGE(PythonLibs)
+
+INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+SET_SOURCE_FILES_PROPERTIES(medCore.i PROPERTIES CPLUSPLUS ON)
+SET_SOURCE_FILES_PROPERTIES(medCore.i PROPERTIES SWIG_FLAGS "-includeall")
+
 ## #############################################################################
 ## include directories.
 ## #############################################################################
@@ -52,6 +63,13 @@ list_header_directories_to_include(${PROJECT_NAME}
   )
 
 include_directories(${${PROJECT_NAME}_INCLUDE_DIRS})
+
+foreach(DIR_TO_INCLUDE ${MEDINRIA_INCLUDE_DIRS})
+	SET_SOURCE_FILES_PROPERTIES(medCore.i PROPERTIES SWIG_FLAGS "-I${DIR_TO_INCLUDE}")
+endforeach(DIR_TO_INCLUDE)
+SET_SOURCE_FILES_PROPERTIES(medCore.i PROPERTIES SWIG_FLAGS "-I${DIR_TO_INCLUDE}")
+
+SWIG_ADD_MODULE(medCorePy python medCore.i ${${PROJECT_NAME}_SOURCES})
 
 
 ## #############################################################################
@@ -93,6 +111,14 @@ target_link_libraries(${PROJECT_NAME}
     dtkGui
     dtkLog
     )
+
+SWIG_LINK_LIBRARIES(medCorePy ${PYTHON_LIBRARIES})
+SWIG_LINK_LIBRARIES(medCorePy ${QT_LIBRARIES})
+SWIG_LINK_LIBRARIES(medCorePy ${OPENGL_LIBRARIES})
+SWIG_LINK_LIBRARIES(medCorePy dtkCore)
+SWIG_LINK_LIBRARIES(medCorePy dtkGui)
+SWIG_LINK_LIBRARIES(medCorePy dtkLog)
+
 
 if (WIN32) #TODO is that for the memory management thing ?
   target_link_libraries(${PROJECT_NAME} psapi.lib)

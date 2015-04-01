@@ -44,7 +44,7 @@ QStringList itkNiftiDataImageReader::s_handled() {
             << "itkDataImageRGB3" << "itkDataImageRGB3";
 }
 
-bool itkNiftiDataImageReader::registered() {
+bool itkNiftiDataImageReader::registered() {qDebug()<<"registering at "<<medAbstractDataFactory::instance();
     return medAbstractDataFactory::instance()->registerDataReaderType(ID,s_handled(),createItkNiftiDataImageReader);
 }
 

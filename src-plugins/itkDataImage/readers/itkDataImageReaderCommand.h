@@ -17,19 +17,19 @@ class dtkAbstractDataReader;
 
 namespace itk {
 
-  class DataImageReaderCommand: public Command {
+  class DataImageReaderCommand: public itk::Command {
   public:
 
     typedef DataImageReaderCommand         Self;
-    typedef Command                        Superclass;
+    typedef itk::Command                        Superclass;
     typedef itk::SmartPointer<Self>        Pointer;
     typedef itk::SmartPointer<const Self>  ConstPointer;
     
-    itkTypeMacro( DataImageReaderCommand, Command );
+    itkTypeMacro( DataImageReaderCommand, itk::Command );
     itkNewMacro (Self);
     
-    void Execute(Object *caller, const EventObject &event);
-    void Execute(const Object *caller, const EventObject &event);
+    void Execute(itk::Object *caller, const itk::EventObject &event);
+    void Execute(const itk::Object *caller, const itk::EventObject &event);
     
     void SetDataImageReader (dtkAbstractDataReader* reader)
     { m_Reader = reader; }

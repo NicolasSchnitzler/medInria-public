@@ -28,20 +28,20 @@
 // implement an observer
 namespace itk {
 
-class DCMTKDataImageReaderCommand : public Command {
+class DCMTKDataImageReaderCommand : public itk::Command {
 
 public:
 
     typedef DCMTKDataImageReaderCommand     Self;
-    typedef Command                        Superclass;
+    typedef itk::Command                        Superclass;
     typedef itk::SmartPointer<Self>        Pointer;
     typedef itk::SmartPointer<const Self>  ConstPointer;
 
-    itkTypeMacro(DCMTKDataImageReaderCommand,Command);
+    itkTypeMacro(DCMTKDataImageReaderCommand,itk::Command);
     itkNewMacro(Self);
 
-    void Execute(Object *caller,const EventObject &event);
-    void Execute(const Object *caller,const EventObject &event);
+    void Execute(itk::Object *caller,const itk::EventObject &event);
+    void Execute(const itk::Object *caller,const itk::EventObject &event);
 
     void SetDataImageReader(dtkAbstractDataReader* reader) { m_Reader = reader; }
 
@@ -53,9 +53,9 @@ private:
     dtkAbstractDataReader* m_Reader;
 };
 
-void DCMTKDataImageReaderCommand::Execute(Object *caller,const EventObject &event)
+void DCMTKDataImageReaderCommand::Execute(itk::Object *caller,const itk::EventObject &event)
 {
-    ImageIOBase *po = dynamic_cast<ImageIOBase *>(caller);
+    itk::ImageIOBase *po = dynamic_cast<itk::ImageIOBase *>(caller);
 
     if (!po)
         return;
@@ -66,8 +66,8 @@ void DCMTKDataImageReaderCommand::Execute(Object *caller,const EventObject &even
     }
 }
 
-void DCMTKDataImageReaderCommand::Execute(const Object *caller,const EventObject &event) {
-    ImageIOBase *po = dynamic_cast<ImageIOBase*>(const_cast<Object *>(caller));
+void DCMTKDataImageReaderCommand::Execute(const itk::Object *caller,const itk::EventObject &event) {
+    itk::ImageIOBase *po = dynamic_cast<itk::ImageIOBase*>(const_cast<itk::Object *>(caller));
     if (!po)
         return;
 

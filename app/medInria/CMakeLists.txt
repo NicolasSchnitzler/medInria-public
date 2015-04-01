@@ -20,6 +20,17 @@ project(medInria)
 add_subdirectory(QSingleApplication)
 add_subdirectory(resources)
 
+FIND_PACKAGE(SWIG REQUIRED)
+INCLUDE(${SWIG_USE_FILE})
+
+FIND_PACKAGE(PythonLibs)
+
+INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+SET_SOURCE_FILES_PROPERTIES(medInria.i PROPERTIES CPLUSPLUS ON)
+SET_SOURCE_FILES_PROPERTIES(medInria.i PROPERTIES SWIG_FLAGS "-includeall")
+
 list_source_files(${PROJECT_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
@@ -36,6 +47,14 @@ list_header_directories_to_include(${PROJECT_NAME}
 include_directories(${${PROJECT_NAME}_INCLUDE_DIRS} 
   ${MEDINRIA_INCLUDE_DIRS}
   )  
+
+foreach(DIR_TO_INCLUDE ${MEDINRIA_INCLUDE_DIRS})
+	SET_SOURCE_FILES_PROPERTIES(medInria.i PROPERTIES SWIG_FLAGS "-I${DIR_TO_INCLUDE}")
+	message (DIR_TO_INCLUDE)
+endforeach(DIR_TO_INCLUDE)
+SET_SOURCE_FILES_PROPERTIES(medInria.i PROPERTIES SWIG_FLAGS "-I${DIR_TO_INCLUDE}")
+
+SWIG_ADD_MODULE(medinria python medInria.i ${${PROJECT_NAME}_SOURCES})
 
 ## #############################################################################
 ## Add preproc if we have revisions from the super project
@@ -131,6 +150,14 @@ target_link_libraries(${PROJECT_NAME}
   medPacs
   )
 
+SWIG_LINK_LIBRARIES(medinria ${PYTHON_LIBRARIES})
+SWIG_LINK_LIBRARIES(medinria ${QT_LIBRARIES})
+SWIG_LINK_LIBRARIES(medinria dtkScript)
+SWIG_LINK_LIBRARIES(medinria dtkCore)
+SWIG_LINK_LIBRARIES(medinria dtkGui)
+SWIG_LINK_LIBRARIES(medinria dtkVr)
+SWIG_LINK_LIBRARIES(medinria medCore)
+SWIG_LINK_LIBRARIES(medinria medPacs)
 
 ## #############################################################################
 ## install

@@ -16,7 +16,5 @@
 #include <itkDataImage.h>
 #include <itkDataImagePluginExport.h>
 
-extern const char itkDataImageChar4Name[] = "itkDataImageChar4";
+extern const char itkDataImageChar4Name[];
 typedef ITKDATAIMAGEPLUGIN_EXPORT itkDataImage<4,char,itkDataImageChar4Name> itkDataImageChar4;
-
-
