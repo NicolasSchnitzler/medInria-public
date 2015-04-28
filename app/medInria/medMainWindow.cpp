@@ -595,6 +595,7 @@ void medMainWindow::loadScene()
 
 		hasContainer=true;
 	}
+    update();
 }
 
 void medMainWindow::captureScreenshot()

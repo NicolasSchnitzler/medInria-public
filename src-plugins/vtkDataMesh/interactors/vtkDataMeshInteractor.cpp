@@ -294,6 +294,7 @@ void vtkDataMeshInteractor::setColor(QColor color)
 
 void vtkDataMeshInteractor::setColor(const QString &color)
 {
+    d->colorParam->setValue(color);
     setColor(QColor(color));
 }
 
@@ -307,6 +308,7 @@ QColor vtkDataMeshInteractor::color() const
 
 void vtkDataMeshInteractor::setRenderingType(const QString & type)
 {
+    d->renderingParam->setValue(type);
     QString value = type.toLower();
     if (value == "wireframe")
         d->actorProperty->SetRepresentationToWireframe ();
@@ -327,6 +329,7 @@ QString vtkDataMeshInteractor::renderingType() const
 
 void vtkDataMeshInteractor::setAttribute(const QString & attributeName)
 {
+    d->attributesParam->setValue(attributeName);
     vtkPointSet * pointSet = vtkPointSet::SafeDownCast(d->metaDataSet->GetDataSet());
     if ( ! pointSet )
         return;
@@ -399,6 +402,7 @@ QString vtkDataMeshInteractor::attribute() const
 
 void vtkDataMeshInteractor::setLut(const QString & lutName)
 {
+    d->LUTParam->setValue(lutName);
     vtkLookupTable * lut = NULL;
 
     if (lutName != "Default")
@@ -585,6 +589,25 @@ void vtkDataMeshInteractor::updateSlicingParam()
     d->slicingParameter->blockSignals(false);
 
     d->slicingParameter->setValue(d->view2d->GetSlice());
+}
+
+void vtkDataMeshInteractor::restoreParameters(QHash<QString, QString> parameters)
+{
+    if(parameters.contains("Attributes"))
+        setAttribute(parameters["Attributes"]);
+    if(parameters.contains("Opacity"))
+        setOpacity(medDoubleParameter::fromString(parameters["Opacity"]));
+    if(parameters.contains("Visibility"))
+        setVisibility(medBoolParameter::fromString(parameters["Visibility"]));
+    if(parameters.contains("LUT"))
+        setLut(parameters["LUT"]);
+    if(parameters.contains("Edge Visible"))
+        setEdgeVisibility(medBoolParameter::fromString(parameters["Edge Visible"]));
+    if(parameters.contains("Rendering"))
+        setRenderingType(parameters["Rendering"]);
+    if(parameters.contains("Color"))
+        setColor(parameters["Color"]);
+
 }
 
 QString vtkDataMeshInteractor::name() const
