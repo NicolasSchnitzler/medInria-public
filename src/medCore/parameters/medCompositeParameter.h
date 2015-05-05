@@ -36,6 +36,7 @@ public:
     virtual QList<QVariant> values() const;
     QList<QPair <QVariant, QVariant> > ranges() const;
     QList<QVariant> steps() const;
+    virtual QVariant value(QString) const;
 
     virtual void trigger();
 

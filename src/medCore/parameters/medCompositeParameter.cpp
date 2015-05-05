@@ -269,6 +269,11 @@ QList<QVariant> medCompositeParameter::steps() const
     return d->steps.values();
 }
 
+QVariant medCompositeParameter::value(QString key) const
+{
+    return d->variants.value(key);
+}
+
 void medCompositeParameter::trigger()
 {
     emit valuesChanged(d->variants);
