@@ -43,8 +43,8 @@ vtkCompareImageManager::vtkCompareImageManager()
   m_CheckerImageFilter->SetInput1Data(m_MapToWindowLevelImageFilter1->GetOutput());
   m_CheckerImageFilter->SetInput2Data (m_MapToWindowLevelImageFilter2->GetOutput());
 
-  m_FuseImageFilter->SetInputData (0, m_MapToWindowLevelImageFilter1->GetOutput());
-  m_FuseImageFilter->SetInputData (1, m_MapToWindowLevelImageFilter2->GetOutput());
+  m_FuseImageFilter->SetInputConnection (0, m_MapToWindowLevelImageFilter1->GetOutputPort());
+  m_FuseImageFilter->SetInputConnection (1, m_MapToWindowLevelImageFilter2->GetOutputPort());
   
 
   m_ComparisonMode = vtkCompareImageManager::COMPARE_FUSE;

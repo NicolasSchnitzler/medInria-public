@@ -73,6 +73,7 @@
 #include <vtkImageReslice.h>
 #include <vtkInformation.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
+#include <vtkImageMapper3D.h>
 
 #include <vtkTextActor3D.h>
 
@@ -166,7 +167,7 @@ void vtkImage2DDisplay::SetInput(vtkImageData * image)
   else
   {
     this->WindowLevel->SetInputData(image);
-    this->ImageActor->SetInputData( this->WindowLevel->GetOutput() );
+    this->ImageActor->GetMapper()->SetInputConnection( this->WindowLevel->GetOutputPort() );
   }
 }
 
@@ -189,8 +190,11 @@ vtkCxxRevisionMacro(vtkImageView2D, "$Revision: 3 $");
 vtkStandardNewMacro(vtkImageView2D);
 
 //----------------------------------------------------------------------------
-vtkImageView2D::vtkImageView2D()
+vtkImageView2D::vtkImageView2D(): vtkImageView()
 {
+
+  for(int i=0; i<3; i++)
+      this->CurrentPoint[i] = 0.0;
 
   this->Axes2DWidget        = vtkAxes2DWidget::New();
   this->RulerWidget         = vtkRulerWidget::New();
@@ -218,6 +222,7 @@ vtkImageView2D::vtkImageView2D()
   this->ViewOrientation = vtkImageView2D::VIEW_ORIENTATION_AXIAL;
   this->ViewCenter[0] = this->ViewCenter[1] = this->ViewCenter[2] = 0;
   this->Pan[0] = this->Pan[1] = 0.0;
+    std::cout<<"  this->Slice = 0; (l221)"<<std::endl;
   this->Slice = 0;
 
   this->ConventionMatrix->Zero();
@@ -263,7 +268,6 @@ vtkImageView2D::vtkImageView2D()
   this->SetTransferFunctions(NULL, NULL, 0);
 
   SetRenderer(this->LayerInfoVec[0].Renderer);
-
 }
 
 //----------------------------------------------------------------------------
@@ -502,7 +506,11 @@ void vtkImageView2D::SetSliceOrientation(int orientation)
   // The slice might have changed in the process
   if (this->Input)
   {
+      if(this->Slice!=-42)
+          std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->Slice = this->GetSliceForWorldCoordinates (this->CurrentPoint);
+      if(this->Slice!=-42)
+          std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->UpdateDisplayExtent();
     this->UpdateSlicePlane();
     this->InvokeEvent (vtkImageView2D::SliceChangedEvent);
@@ -566,7 +574,6 @@ void vtkImageView2D::UpdateDisplayExtent()
 
   this->GetInputAlgorithm()->UpdateInformation();
   int* w_ext = this->GetInputAlgorithm()->GetOutputInformation(0)->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT());
-
   int slice = this->Slice;
   int *range = this->GetSliceRange();
   if (range)
@@ -592,6 +599,8 @@ void vtkImageView2D::UpdateDisplayExtent()
     switch (this->SliceOrientation)
     {
       case vtkImageView2D::SLICE_ORIENTATION_XY:
+        if(slice!=-42)
+            std::cout<<"slice: "<<slice<<std::endl;
         imageDisplay->GetImageActor()->SetDisplayExtent(w_ext[0], w_ext[1], w_ext[2], w_ext[3], slice, slice);
         break;
 
@@ -847,7 +856,11 @@ void vtkImageView2D::SetCurrentPoint(double pos[3])
 
   if(new_slice != old_slice)
   {
+      if(this->Slice!=-42)
+          std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->Slice = new_slice;
+      if(this->Slice!=-42)
+          std::cout<<"modifying slice "<<__LINE__<<std::endl;
     sliceChanged = true;
   }
 
@@ -1291,8 +1304,15 @@ Convert a world coordinate point into an image indices coordinate point
 */
 int vtkImageView2D::GetSliceForWorldCoordinates(double pos[3]) const
 {
+    if (pos)
+        std::cout<<"dump"<<std::endl;
   int indices[3];
   this->GetImageCoordinatesFromWorldCoordinates (pos, indices);
+  if (indices[2])
+      std::cout<<"dump"<<std::endl;
+  if (this->SliceOrientation)
+      std::cout<<"dump"<<std::endl;
+
   return indices[this->SliceOrientation];
 }
 
@@ -1429,8 +1449,11 @@ Reset position - zoom - window/level to default
 */
 void vtkImageView2D::Reset()
 {
+    qDebug()<<"vtkImageView2D::Reset()";
   this->Superclass::Reset();
+    qDebug()<<"vtkImageView2D::Reset() point 2";
   this->UpdateDisplayExtent();
+    qDebug()<<"vtkImageView2D::Reset() point 3";
 }
 //----------------------------------------------------------------------------
 /**
@@ -1856,6 +1879,7 @@ void vtkImageView2D::SetFirstLayer (vtkImageData *image, vtkMatrix4x4 *matrix, i
         this->SetColorRange(range,layer);
         this->Reset();
     }
+    //this->InvokeEvent(vtkImageView2DCommand::ResetViewerEvent, this);
 }
 
 bool vtkImageView2D::IsFirstLayer(int layer) const
@@ -1935,7 +1959,11 @@ void vtkImageView2D::SetInput (vtkImageData *image, vtkMatrix4x4 *matrix, int la
     renderer->AddViewProp (this->GetImage2DDisplayForLayer(layer)->GetImageActor());
 
   this->SetCurrentLayer(layer);
+  if(this->Slice!=-42)
+      std::cout<<"modifying slice "<<__LINE__<<std::endl;
   this->Slice = this->GetSliceForWorldCoordinates (this->CurrentPoint);
+  if(this->Slice!=-42)
+      std::cout<<"modifying slice "<<__LINE__<<std::endl;
   this->UpdateDisplayExtent();
   // this->UpdateCenter();
   this->UpdateSlicePlane();
@@ -1952,7 +1980,7 @@ void vtkImageView2D::SetInput (vtkImageData *image, vtkMatrix4x4 *matrix, int la
     this->ShowRulerWidgetOff();
     this->ShowRulerWidgetOn();
   }
-
+//this->InvokeEvent(vtkImageView2DCommand::ResetViewerEvent, this);
 }
 
 void vtkImageView2D::SetInput (vtkActor *actor, int layer, vtkMatrix4x4 *matrix, const int imageSize[], const double imageSpacing[], const double imageOrigin[])
@@ -1984,7 +2012,11 @@ void vtkImageView2D::SetInput (vtkActor *actor, int layer, vtkMatrix4x4 *matrix,
     UpdateBounds(bounds, layer, imageSize, imageSpacing, imageOrigin);
 
     this->SetCurrentLayer(layer);
+    if(this->Slice!=-42)
+        std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->Slice = this->GetSliceForWorldCoordinates (this->CurrentPoint);
+    if(this->Slice!=-42)
+        std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->UpdateDisplayExtent();
     // this->UpdateCenter();
     this->UpdateSlicePlane();
@@ -2002,13 +2034,17 @@ void vtkImageView2D::RemoveLayerActor(vtkActor *actor, int layer)
         return;
     
     renderer->RemoveActor(actor);
-    
     this->SetCurrentLayer(layer);
+    if(this->Slice!=-42)
+        std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->Slice = this->GetSliceForWorldCoordinates (this->CurrentPoint);
+    if(this->Slice!=-42)
+        std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->UpdateDisplayExtent();
     // this->UpdateCenter();
     this->UpdateSlicePlane();
     this->InvokeEvent (vtkImageView2D::SliceChangedEvent);
+    //this->InvokeEvent(vtkImageView2DCommand::ResetViewerEvent, this);
 }
 
 int vtkImageView2D::AddInput (vtkImageData *image, vtkMatrix4x4 *matrix)
@@ -2032,12 +2068,17 @@ void vtkImageView2D::SetInputConnection (vtkAlgorithmOutput *input, vtkMatrix4x4
   // The slice might have changed in the process
   if (this->Input)
   {
+      if(this->Slice!=-42)
+          std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->Slice = this->GetSliceForWorldCoordinates (this->CurrentPoint);
+      if(this->Slice!=-42)
+          std::cout<<"modifying slice "<<__LINE__<<std::endl;
     this->UpdateDisplayExtent();
     // this->UpdateCenter();
     this->UpdateSlicePlane();
     this->InvokeEvent (vtkImageView2D::SliceChangedEvent);
   }
+  //this->InvokeEvent(vtkImageView2DCommand::ResetViewerEvent, this);
 }
 
 //----------------------------------------------------------------------------

@@ -593,7 +593,7 @@ protected:
     virtual bool Compare(vtkMatrix4x4 *mat1, vtkMatrix4x4 *mat2);
 
 
-    virtual vtkImageData *ResliceImageToInput(vtkImageData *image, vtkMatrix4x4 *matrix);
+    virtual vtkImageData *ResliceImageToInput(vtkImageData *image, vtkMatrix4x4 *matrix, vtkAlgorithm *alg=NULL);
 
     virtual void GetWithinBoundsPosition (double* pos1, double* dos2);
 

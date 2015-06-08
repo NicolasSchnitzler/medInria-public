@@ -173,7 +173,7 @@ void vtkMeshCropManager::Reset()
   if( !this->GetInput() ) return;
 
   this->BoxWidget->SetInputData ( this->GetInput() );
-  this->Callback->GetMeshLimiter()->SetInputData ( this->Callback->GetMeshLimiter()->GetOutput() );
+  this->Callback->GetMeshLimiter()->SetInputConnection ( this->Callback->GetMeshLimiter()->GetOutputPort() );
   this->Callback->Execute (this->BoxWidget, 0, NULL);
 }
 

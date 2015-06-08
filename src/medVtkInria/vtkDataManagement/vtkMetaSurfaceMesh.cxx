@@ -135,18 +135,18 @@ void vtkMetaSurfaceMesh::ReadOBJFile (const char* filename)
   {
     reader->Update();
     vtkCleanPolyData* cleanFilter = vtkCleanPolyData::New();
-    cleanFilter->SetInputData(reader->GetOutput());
+    cleanFilter->SetInputConnection(reader->GetOutputPort());
     cleanFilter->ConvertLinesToPointsOn();
     cleanFilter->ConvertPolysToLinesOn();
     cleanFilter->ConvertStripsToPolysOn();
     cleanFilter->PointMergingOn();
     cleanFilter->Update();
     vtkDataSetSurfaceFilter* surfaceFilter = vtkDataSetSurfaceFilter::New();
-    surfaceFilter->SetInputData(cleanFilter->GetOutput());
+    surfaceFilter->SetInputConnection(cleanFilter->GetOutputPort());
     surfaceFilter->Update();
     this->SetDataSet (surfaceFilter->GetOutput());
-    cleanFilter->Delete();
-    surfaceFilter->Delete();
+    //cleanFilter->Delete();
+    //surfaceFilter->Delete();
   }
   catch (vtkErrorCode::ErrorIds error)
   {

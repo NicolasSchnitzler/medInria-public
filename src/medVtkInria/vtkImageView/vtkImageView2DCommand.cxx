@@ -66,6 +66,8 @@ vtkImageView2DCommand::Execute(vtkObject*    caller,
   // Reset
   if (event == vtkImageView2DCommand::ResetWindowLevelEvent)
   {
+      this->Viewer->UpdateCursorPosition(this->Viewer->GetCurrentPoint());
+
     this->Viewer->ResetWindowLevel();
     this->Viewer->Render();
     return;

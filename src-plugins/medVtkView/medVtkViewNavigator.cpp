@@ -496,6 +496,7 @@ void medVtkViewNavigator::setCameraFocalPoint(const QVector3D& focal)
     foc[2] = focal.z();
 
     d->view3d->GetInteractorStyle()->HandleObserversOff();
+    std::cerr<<"void medVtkViewNavigator::setCameraFocalPoint(const QVector3D& focal) point focal: "<<foc<<std::endl;
     d->renderer3d->GetActiveCamera()->SetFocalPoint(foc);
     d->view3d->GetInteractorStyle()->HandleObserversOn();
 }
@@ -574,7 +575,7 @@ void medVtkViewNavigator::changeOrientation(medImageView::Orientation orientatio
     this->zoomParameter()->blockSignals(true);
     this->cameraParameter()->blockSignals(true);
 
-    double pos[3];
+    double pos[3]={0,0,0};
     int timeIndex = 0;
     vtkRenderWindow * renWin = 0;
     if(d->currentView)
@@ -625,7 +626,7 @@ void medVtkViewNavigator::changeOrientation(medImageView::Orientation orientatio
     }
 
     d->currentView->SetRenderWindow(renWin);
-    d->currentView->SetCurrentPoint(pos);
+    d->currentView->SetCurrentPoint(d->currentView->GetRenderer()->GetActiveCamera()->GetFocalPoint());
     d->currentView->SetTimeIndex(timeIndex);
     d->currentView->Render();
 
