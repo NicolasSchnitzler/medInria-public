@@ -658,109 +658,112 @@ void vtkImageView3D::AddInput (vtkImageData* input, vtkMatrix4x4 *matrix)
 //----------------------------------------------------------------------------
 void vtkImageView3D::InternalUpdate()
 {
-  vtkSmartPointer<vtkImageData> input = this->GetInput();
-  bool multiLayers = false;
+    vtkSmartPointer<vtkImageData> input = this->GetInput();
 
-  bool multichannelInput = (this->Input->GetScalarType() == VTK_UNSIGNED_CHAR &&
-                            (this->Input->GetNumberOfScalarComponents() == 3 ||
-                             this->Input->GetNumberOfScalarComponents() == 4 ));
+    bool multiLayers = false;
 
-  if(input == NULL)
-  {
-      this->Renderer->RemoveAllViewProps();
+    bool multichannelInput = (this->Input->GetScalarType() == VTK_UNSIGNED_CHAR &&
+                              (this->Input->GetNumberOfScalarComponents() == 3 ||
+                               this->Input->GetNumberOfScalarComponents() == 4 ));
 
-      //TODO apparently RemoveAllViewProps() is not enough, though it should be
-      this->ActorX->SetInputData ( (vtkImageData*)0 );
-      this->ActorY->SetInputData ( (vtkImageData*)0 );
-      this->ActorZ->SetInputData ( (vtkImageData*)0 );
+    if(input == NULL)
+    {
+        this->Renderer->RemoveAllViewProps();
 
-      this->Render();
-      return;
-  }
+        //TODO apparently RemoveAllViewProps() is not enough, though it should be
+        this->ActorX->SetInputData ( (vtkImageData*)0 );
+        this->ActorY->SetInputData ( (vtkImageData*)0 );
+        this->ActorZ->SetInputData ( (vtkImageData*)0 );
 
-  if (this->LayerInfoVec.size()>0 &&  !multichannelInput)
-  {
-    // append all scalar buffer into the same image
+        this->Render();
+        return;
+    }
     vtkImageAppendComponents *appender = vtkImageAppendComponents::New();
 
-    for( LayerInfoVecType::const_iterator it = this->LayerInfoVec.begin();
-         it!=this->LayerInfoVec.end(); ++it)
+    if (this->LayerInfoVec.size()>0 &&  !multichannelInput)
     {
-      if (!it->ImageDisplay->GetInput())
-        continue;
+        // append all scalar buffer into the same image
+        //vtkImageAppendComponents *appender = vtkImageAppendComponents::New();
 
-      appender->AddInputData(it->ImageDisplay->GetInput());
+        for( LayerInfoVecType::const_iterator it = this->LayerInfoVec.begin();
+             it!=this->LayerInfoVec.end(); ++it)
+        {
+            if (!it->ImageDisplay->GetInput())
+                continue;
+
+            appender->AddInputData(it->ImageDisplay->GetInput());
+        }
+
+
+        if (this->LayerInfoVec.size()>1)
+        {
+            multiLayers = true;
+        }
     }
-
+    appender->Update();
     input = appender->GetOutput();
-
-    appender->Delete();
-    if (this->LayerInfoVec.size()>1)
+    // hack: modify the input MTime such that it is higher
+    // than the VolumeMapper's one to force it to refresh
+    // (see vtkSmartVolumeMapper::ConnectMapperInput(vtkVolumeMapper *m))
+    if (this->VolumeMapper->GetInput())
     {
-      multiLayers = true;
+        unsigned long mtime = this->VolumeMapper->GetInput()->GetMTime();
+
+        while (input->GetMTime()<=mtime)
+            input->Modified();
     }
-  }
 
-  // hack: modify the input MTime such that it is higher
-  // than the VolumeMapper's one to force it to refresh
-  // (see vtkSmartVolumeMapper::ConnectMapperInput(vtkVolumeMapper *m))
-  if (this->VolumeMapper->GetInput())
-  {
-    unsigned long mtime = this->VolumeMapper->GetInput()->GetMTime();
+    this->VolumeMapper->SetInputConnection(    appender->GetOutputPort());
+    this->VolumeMapper->Update();
+    this->VolumeMapper->Modified();
+    //appender->Delete();
 
-    while (input->GetMTime()<=mtime)
-      input->Modified();
-  }
+    // If an image is already of type unsigned char, there is no need to
+    // map it through a lookup table
 
-  this->VolumeMapper->SetInputData (input);
-  this->VolumeMapper->Modified();
-
-  // If an image is already of type unsigned char, there is no need to
-  // map it through a lookup table
-
-  if ( !multiLayers &&  multichannelInput )
-  {
-    this->VolumeProperty->IndependentComponentsOff();
-    //shading and more than one dependent component (rgb) don't work well...
-    //as vtk stands now in debug mode an assert makes this crash.
-    this->VolumeProperty->ShadeOff();
-    this->ActorX->SetInputData ( input );
-    this->ActorY->SetInputData ( input );
-    this->ActorZ->SetInputData ( input );
-  }
-  else
-  {
-    this->VolumeProperty->IndependentComponentsOn();
-    this->VolumeProperty->ShadeOn();
-    this->PlanarWindowLevel->SetInputData(this->Input);
-    this->PlanarWindowLevel->SetOutputFormatToRGB();
-
-    this->PlanarWindowLevel->UpdateInformation();
-    this->PlanarWindowLevel->Update();
-
-
-    vtkScalarsToColors* lut = this->VolumeProperty->GetRGBTransferFunction(0);
-    if (lut)
+    if ( !multiLayers &&  multichannelInput )
     {
-      this->PlanarWindowLevel->SetLookupTable(lut);
-      this->ActorX->SetInputData ( this->PlanarWindowLevel->GetOutput() );
-      this->ActorY->SetInputData ( this->PlanarWindowLevel->GetOutput() );
-      this->ActorZ->SetInputData ( this->PlanarWindowLevel->GetOutput() );
+        this->VolumeProperty->IndependentComponentsOff();
+        //shading and more than one dependent component (rgb) don't work well...
+        //as vtk stands now in debug mode an assert makes this crash.
+        this->VolumeProperty->ShadeOff();
+        this->ActorX->SetInputData ( input );
+        this->ActorY->SetInputData ( input );
+        this->ActorZ->SetInputData ( input );
     }
-  }
+    else
+    {
+        this->VolumeProperty->IndependentComponentsOn();
+        this->VolumeProperty->ShadeOn();
+        this->PlanarWindowLevel->SetInputData(this->Input);
+        this->PlanarWindowLevel->SetOutputFormatToRGB();
 
-  // Read bounds and use these to place widget, rather than force whole dataset to be read.
-  double bounds [6];
-  this->GetInputBounds (bounds);
+        this->PlanarWindowLevel->UpdateInformation();
+        this->PlanarWindowLevel->Update();
 
-  this->BoxWidget->SetInputData (input);
-  this->BoxWidget->PlaceWidget (bounds);
-  this->Callback->Execute (this->BoxWidget, 0, bounds);
 
-  this->PlaneWidget->SetInputData (input);
-  this->PlaneWidget->PlaceWidget(bounds);
+        vtkScalarsToColors* lut = this->VolumeProperty->GetRGBTransferFunction(0);
+        if (lut)
+        {
+            this->PlanarWindowLevel->SetLookupTable(lut);
+            this->ActorX->SetInputData ( this->PlanarWindowLevel->GetOutput() );
+            this->ActorY->SetInputData ( this->PlanarWindowLevel->GetOutput() );
+            this->ActorZ->SetInputData ( this->PlanarWindowLevel->GetOutput() );
+        }
+    }
 
-  this->UpdateDisplayExtent();
+    // Read bounds and use these to place widget, rather than force whole dataset to be read.
+    double bounds [6];
+    this->GetInputBounds (bounds);
+
+    this->BoxWidget->SetInputData (input);
+    this->BoxWidget->PlaceWidget (bounds);
+    this->Callback->Execute (this->BoxWidget, 0, bounds);
+
+    this->PlaneWidget->SetInputData (input);
+    this->PlaneWidget->PlaceWidget(bounds);
+
+    this->UpdateDisplayExtent();
 }
 
 //----------------------------------------------------------------------------
