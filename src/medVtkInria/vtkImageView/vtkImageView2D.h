@@ -19,7 +19,6 @@
 
 #include <vtkSmartPointer.h>
 
-
 #include <vector>
 
 class vtkImageActor;

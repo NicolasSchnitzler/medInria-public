@@ -75,7 +75,6 @@
 #include <vtkStreamingDemandDrivenPipeline.h>
 
 #include <vtkTextActor3D.h>
-#include <vtkImageMapper3D.h>
 
 #include <vector>
 #include <string>
@@ -167,7 +166,7 @@ void vtkImage2DDisplay::SetInput(vtkImageData * image)
   else
   {
     this->WindowLevel->SetInputData(image);
-    this->ImageActor->GetMapper()->SetInputConnection( this->WindowLevel->GetOutputPort() );
+    this->ImageActor->SetInputData( this->WindowLevel->GetOutput() );
   }
 }
 
